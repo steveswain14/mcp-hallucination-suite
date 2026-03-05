@@ -1,6 +1,7 @@
 ![Version](https://img.shields.io/badge/version-v1.0.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-Apache--2.0-green)
 ![Release](https://img.shields.io/github/v/release/steveswain14/mcp-hallucination-suite)
+
 
 # mcp-hallucination-suite
 
