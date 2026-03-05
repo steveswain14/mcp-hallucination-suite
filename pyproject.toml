@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-hallucination-suite"
+version = "0.1.0"
+description = "A structural anti-hallucination middleware suite for AI agent pipelines"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=3.0.0",
+]
+
+[project.scripts]
+json-suppressor     = "servers.json_suppressor_server:mcp.run"
+prompt-suppressor   = "servers.prompt_suppressor_server:mcp.run"
+tool-suppressor     = "servers.tool_response_suppressor_server:mcp.run"
+grounding-enforcer  = "servers.grounding_enforcer_server:mcp.run"
+meta-suppressor     = "servers.meta_suppressor_server:mcp.run"
