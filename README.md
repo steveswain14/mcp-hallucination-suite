@@ -91,6 +91,12 @@ Every suppressor is available as plain Python with no MCP dependency:
 from suppressor_suite.json_suppressor import validate
 from suppressor_suite.grounding_enforcer import suppress
 ```
+## Related repositories
+- mcp-prompt-suppressor
+- mcp-json-suppressor
+- mcp-tool-response-suppressor
+- mcp-grounding-enforcer
+
 
 ## Contributing
 
