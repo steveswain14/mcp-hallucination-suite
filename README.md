@@ -25,7 +25,7 @@ pip install -e .
 
 ## Quick start
 
-Add individual suppressors to your Claude Desktop config:
+Add individual suppressors to your MCP client configuration (Claude Desktop, Cursor, Windsurf, or any MCP‑compatible environment).
 ```json
 {
   "mcpServers": {
