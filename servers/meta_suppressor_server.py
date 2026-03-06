@@ -1,13 +1,14 @@
 """
 meta_suppressor MCP server — thin FastMCP wrapper around suppressor_suite.meta_suppressor.
 """
-
-
 from typing import Any
-from mcp.server.fastmcp import FastMCP
+from fastapi import FastAPI
+from fastmcp import FastMCP
 from suppressor_suite.meta_suppressor import suppress as _suppress
 
 mcp = FastMCP("meta_suppressor")
+app = FastAPI()
+app.mount("/mcp", mcp.http_app())
 
 
 @mcp.tool()
