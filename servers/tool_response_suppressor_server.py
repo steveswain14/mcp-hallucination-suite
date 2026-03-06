@@ -2,9 +2,6 @@
 tool_response_suppressor MCP server — thin FastMCP wrapper around suppressor_suite.tool_response_suppressor.
 """
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from typing import Any, Literal
 from fastmcp import FastMCP
