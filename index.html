@@ -20,7 +20,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.6; }
   a { color: inherit; text-decoration: none; }
-  nav { padding: 18px 48px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: rgba(15,15,15,0.96); backdrop-filter: blur(8px); z-index: 50; }
+  nav { padding: 18px 48px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: rgba(15,15,15,0.96); backdrop-filter: blur(8px); z-index: 50; max-width: 100%; }
   .logo { font-family: var(--mono); font-size: 13px; color: var(--accent); }
   .nav-right { display: flex; align-items: center; gap: 28px; }
   .nav-right a { font-size: 13px; color: var(--muted); transition: color 0.15s; }
@@ -36,11 +36,15 @@
   .btn-yellow { background: var(--accent); color: #000; font-weight: 700; }
   .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
   .btn-outline:hover { border-color: #555; }
+  .email-form { display: flex; gap: 8px; flex-wrap: wrap; }
+  .email-input { font-family: var(--mono); font-size: 13px; background: #111; color: var(--text); border: 1px solid var(--border); border-radius: 3px; padding: 11px 16px; outline: none; width: 260px; transition: border-color 0.15s; }
+  .email-input::placeholder { color: var(--muted); }
+  .email-input:focus { border-color: #555; }
   .key-box { display: none; margin-top: 20px; background: #111; border: 1px solid rgba(212,255,0,0.3); border-radius: 4px; padding: 18px 20px; max-width: 560px; }
   .key-box.show { display: block; }
-  .key-box .label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .key-box.error { border-color: rgba(255,68,68,0.4); }
   .key-box .key { font-family: var(--mono); font-size: 13px; color: var(--accent); word-break: break-all; }
-  .key-box .note { font-size: 12px; color: #555; margin-top: 10px; font-family: var(--mono); }
+  .key-box.error .key { color: var(--red); }
   .terminal-wrap { padding: 0 48px 72px; max-width: 1000px; margin: 0 auto; }
   .terminal { max-width: 720px; background: #111; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .term-bar { background: #1a1a1a; border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 6px; }
@@ -97,13 +101,14 @@
   <h1>Catch AI hallucinations<br>before they reach your users</h1>
   <p>A REST API that validates AI agent output in real time. Detects fabricated citations, prompt injections, malformed tool responses, and ungrounded claims. One endpoint. No setup.</p>
   <div class="hero-actions">
-    <button class="btn btn-yellow" id="freeKeyBtn">Get free API key →</button>
+    <div class="email-form">
+      <input type="email" id="emailInput" class="email-input" placeholder="you@example.com" onkeydown="if(event.key==='Enter')getFreeKey()" />
+      <button class="btn btn-yellow" id="submitBtn" onclick="getFreeKey()">Get free API key →</button>
+    </div>
     <a href="https://buy.stripe.com/test_3cI7sF031blZfEL8Dc67S00" class="btn btn-outline">Go Pro — $25/mo</a>
   </div>
   <div class="key-box" id="keyBox">
-    <div class="label">Your API Key</div>
-    <div class="key" id="keyVal"></div>
-    <div class="note">Save this now — use it in every request as X-API-Key</div>
+    <div class="key" id="keyMsg"></div>
   </div>
 </div>
 
@@ -183,7 +188,7 @@
         <li>All 4 suppressors</li>
         <li>Full API access</li>
       </ul>
-      <button class="btn btn-outline freeKeyBtn">Get free key →</button>
+      <button class="btn btn-outline" onclick="document.getElementById('emailInput').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('emailInput').focus()" style="width:100%;justify-content:center">Get free key →</button>
     </div>
     <div class="price-card pro">
       <div class="price-tier">Pro</div>
@@ -218,26 +223,41 @@
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 async function getFreeKey() {
+  const emailInput = document.getElementById('emailInput');
+  const btn = document.getElementById('submitBtn');
   const box = document.getElementById('keyBox');
-  const val = document.getElementById('keyVal');
-  const btns = document.querySelectorAll('#freeKeyBtn, .freeKeyBtn');
-  btns.forEach(b => b.textContent = 'Generating...');
+  const msg = document.getElementById('keyMsg');
+  const email = emailInput.value.trim();
+  if (!email) { emailInput.focus(); return; }
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  box.classList.remove('show', 'error');
   try {
-    const res = await fetch('https://mcp-hallucination-suite-production.up.railway.app/register/free');
+    const res = await fetch('/register/free', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
     const data = await res.json();
-    val.textContent = data.api_key;
-    box.classList.add('show');
+    if (res.ok) {
+      msg.textContent = 'Check your email for your API key.';
+      box.classList.add('show');
+      btn.textContent = 'Sent ✓';
+    } else {
+      msg.textContent = res.status === 409
+        ? 'An API key for this email already exists.'
+        : (data.detail || 'Something went wrong. Please try again.');
+      box.classList.add('show', 'error');
+      btn.textContent = 'Get free API key →';
+      btn.disabled = false;
+    }
     box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    btns.forEach(b => b.textContent = '✓ Key generated');
-  } catch(e) {
-    btns.forEach(b => b.textContent = 'Error — try again');
+  } catch (e) {
+    msg.textContent = 'Something went wrong. Please try again.';
+    box.classList.add('show', 'error');
+    btn.textContent = 'Get free API key →';
+    btn.disabled = false;
   }
 }
-
-document.getElementById('freeKeyBtn').addEventListener('click', getFreeKey);
-document.querySelectorAll('.freeKeyBtn').forEach(b => b.addEventListener('click', getFreeKey));
-</script>
-</body>
-</html>
