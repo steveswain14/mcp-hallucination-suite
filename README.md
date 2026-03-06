@@ -58,6 +58,23 @@ Or use the meta suppressor to run all four in one call:
 }
 ```
 
+## Hosted API
+
+A hosted version is available at:
+
+`https://mcp-hallucination-suite.fastmcp.app/mcp`
+
+Add it directly to your MCP client config - no installation required:
+```json
+{
+  "mcpServers": {
+    "hallucination-suite": {
+      "url": "https://mcp-hallucination-suite.fastmcp.app/mcp"
+    }
+  }
+}
+```
+
 ## The meta suppressor
 
 The meta suppressor orchestrates all four tools in a single call. Pass it an agent turn and specify which suppressors to run:
