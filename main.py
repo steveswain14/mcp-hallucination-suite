@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from suppressor_suite import meta_suppressor
 
 app = FastAPI()
-mcp_server = FastMCP("mcp-hallucination-suite")
+mcp_server = FastMCP("mcp-hallucination-suite", streamable_http_path="/")
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
