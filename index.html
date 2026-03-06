@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mcp-hallucination-suite</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #171717;
+    --border: #2a2a2a;
+    --accent: #d4ff00;
+    --red: #ff4444;
+    --text: #e2e2e2;
+    --muted: #666;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.6; }
+  a { color: inherit; text-decoration: none; }
+  nav { padding: 18px 48px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: rgba(15,15,15,0.96); backdrop-filter: blur(8px); z-index: 50; max-width: 100%; }
+  .logo { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 28px; }
+  .nav-right a { font-size: 13px; color: var(--muted); transition: color 0.15s; }
+  .nav-right a:hover { color: var(--text); }
+  .nav-btn { font-family: var(--mono); font-size: 12px; background: var(--accent); color: #000 !important; padding: 7px 16px; border-radius: 3px; font-weight: 700; }
+  .hero { padding: 80px 48px 60px; max-width: 1000px; margin: 0 auto; }
+  .badge { display: inline-block; font-family: var(--mono); font-size: 11px; color: var(--accent); border: 1px solid rgba(212,255,0,0.25); padding: 4px 12px; border-radius: 3px; margin-bottom: 28px; letter-spacing: 0.06em; }
+  h1 { font-size: 40px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 20px; color: #fff; }
+  .hero p { font-size: 17px; color: #999; max-width: 560px; margin-bottom: 36px; line-height: 1.65; }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 13px; padding: 11px 22px; border-radius: 3px; border: none; cursor: pointer; transition: opacity 0.15s, transform 0.1s; font-weight: 500; text-decoration: none; }
+  .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-yellow { background: var(--accent); color: #000; font-weight: 700; }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { border-color: #555; }
+  .key-box { display: none; margin-top: 20px; background: #111; border: 1px solid rgba(212,255,0,0.3); border-radius: 4px; padding: 18px 20px; max-width: 560px; }
+  .key-box.show { display: block; }
+  .key-box .label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .key-box .key { font-family: var(--mono); font-size: 13px; color: var(--accent); word-break: break-all; }
+  .key-box .note { font-size: 12px; color: #555; margin-top: 10px; font-family: var(--mono); }
+  .terminal-wrap { padding: 0 48px 72px; max-width: 1000px; margin: 0 auto; }
+  .terminal { max-width: 720px; background: #111; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .term-bar { background: #1a1a1a; border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dr { background: #ff5f57; } .dy { background: #febc2e; } .dg { background: #28c840; }
+  .term-title { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: 8px; }
+  .term-body { padding: 20px 24px; font-family: var(--mono); font-size: 12.5px; line-height: 1.9; }
+  .tc { color: #444; } .tk { color: #7dd3fc; } .tv { color: #86efac; } .tw { color: var(--red); } .tok { color: var(--accent); }
+  .section { padding: 64px 48px; border-top: 1px solid var(--border); max-width: 1000px; margin: 0 auto; }
+  .section-label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+  h2 { font-size: 26px; font-weight: 700; margin-bottom: 36px; color: #fff; letter-spacing: -0.01em; }
+  .grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .card { background: var(--surface); padding: 28px; }
+  .card-name { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 10px; letter-spacing: 0.04em; }
+  .card-desc { font-size: 14px; color: #888; line-height: 1.65; }
+  .code-block { background: #111; border: 1px solid var(--border); border-radius: 4px; padding: 24px 28px; font-family: var(--mono); font-size: 12.5px; line-height: 1.85; overflow-x: auto; max-width: 760px; }
+  .ck { color: #7dd3fc; } .cs { color: #86efac; } .cc { color: #444; } .ckw { color: #c4b5fd; }
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .price-card { background: var(--surface); padding: 32px 28px; }
+  .price-card.pro { background: #141a00; }
+  .price-tier { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+  .price-amount { font-size: 40px; font-weight: 700; color: #fff; letter-spacing: -0.02em; line-height: 1; margin-bottom: 4px; }
+  .price-period { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 28px; }
+  .price-features { list-style: none; margin-bottom: 28px; }
+  .price-features li { font-family: var(--mono); font-size: 12px; color: #888; padding: 7px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .price-features li::before { content: '—'; color: var(--accent); }
+  footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; justify-content: space-between; align-items: center; max-width: 1000px; margin: 0 auto; }
+  footer span { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  footer .links { display: flex; gap: 24px; }
+  footer a { font-family: var(--mono); font-size: 12px; color: var(--muted); transition: color 0.15s; }
+  footer a:hover { color: var(--text); }
+  @media (max-width: 640px) {
+    nav, .hero, .terminal-wrap, .section, footer { padding-left: 20px; padding-right: 20px; }
+    h1 { font-size: 28px; }
+    .grid-2x2, .pricing-grid { grid-template-columns: 1fr; }
+    .nav-right a:not(.nav-btn) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">mcp-hallucination-suite</div>
+  <div class="nav-right">
+    <a href="#suppressors">Suppressors</a>
+    <a href="#pricing">Pricing</a>
+    <a href="https://github.com/steveswain14/mcp-hallucination-suite" target="_blank">GitHub</a>
+    <a href="https://mcp-hallucination-suite-production.up.railway.app/docs" target="_blank" class="nav-btn">API Docs →</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="badge">MCP · REST API · 4 suppressors</div>
+  <h1>Catch AI hallucinations<br>before they reach your users</h1>
+  <p>A REST API that validates AI agent output in real time. Detects fabricated citations, prompt injections, malformed tool responses, and ungrounded claims. One endpoint. No setup.</p>
+  <div class="hero-actions">
+    <button class="btn btn-yellow" onclick="getFreeKey()">Get free API key →</button>
+    <a href="https://buy.stripe.com/test_3cI7sF031blZfEL8Dc67S00" class="btn btn-outline">Go Pro — $25/mo</a>
+  </div>
+  <div class="key-box" id="keyBox">
+    <div class="label">Your API Key</div>
+    <div class="key" id="keyVal"></div>
+    <div class="note">Save this now — use it in every request as X-API-Key</div>
+  </div>
+</div>
+
+<div class="terminal-wrap">
+  <div class="terminal">
+    <div class="term-bar">
+      <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+      <span class="term-title">POST /validate — example response</span>
+    </div>
+    <div class="term-body">
+      <span class="tc">// Input: agent claims McKinsey published this stat</span><br>
+      <span class="tk">"model_output"</span>: <span class="tv">"According to McKinsey, 67% of AI projects fail."</span><br>
+      <span class="tk">"retrieved_sources"</span>: []<br><br>
+      <span class="tc">// Response:</span><br>
+      <span class="tw">"type"</span>: <span class="tw">"ungrounded_attribution"</span><br>
+      <span class="tw">"explanation"</span>: <span class="tw">"Attribution to McKinsey not matched to any source."</span><br>
+      <span class="tw">"total_violations"</span>: <span class="tw">2</span><br><br>
+      <span class="tok">→ Caught before it reached the user.</span>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="suppressors">
+  <div class="section-label">What's included</div>
+  <h2>Four suppressors. One endpoint.</h2>
+  <div class="grid-2x2">
+    <div class="card">
+      <div class="card-name">grounding_enforcer</div>
+      <div class="card-desc">Catches ungrounded claims, fabricated citations, and attributions that can't be matched to a real source.</div>
+    </div>
+    <div class="card">
+      <div class="card-name">prompt_suppressor</div>
+      <div class="card-desc">Detects prompt injection attempts embedded in retrieved content, user inputs, or tool results.</div>
+    </div>
+    <div class="card">
+      <div class="card-name">json_suppressor</div>
+      <div class="card-desc">Validates tool call responses against expected schemas. Rejects malformed, truncated, or injected JSON.</div>
+    </div>
+    <div class="card">
+      <div class="card-name">tool_response_suppressor</div>
+      <div class="card-desc">Validates tool responses against declared outputs. Flags unexpected fields and schema drift.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Integration</div>
+  <h2>One POST request. No config.</h2>
+  <div class="code-block">
+    <span class="cc">// Call before your agent output reaches users</span><br><br>
+    <span class="ckw">const</span> res = <span class="ckw">await</span> fetch(<span class="cs">'https://mcp-hallucination-suite-production.up.railway.app/validate'</span>, {<br>
+    &nbsp;&nbsp;method: <span class="cs">'POST'</span>,<br>
+    &nbsp;&nbsp;headers: {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">'X-API-Key'</span>: <span class="cs">'your-api-key'</span>,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">'Content-Type'</span>: <span class="cs">'application/json'</span><br>
+    &nbsp;&nbsp;},<br>
+    &nbsp;&nbsp;body: JSON.stringify({<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;agent_turn: { grounding: { model_output: output, retrieved_sources: sources } },<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;run: [<span class="cs">'grounding'</span>, <span class="cs">'prompt'</span>, <span class="cs">'json'</span>]<br>
+    &nbsp;&nbsp;})<br>
+    });<br><br>
+    <span class="ckw">const</span> { total_violations } = <span class="ckw">await</span> res.json();<br>
+    <span class="cc">// total_violations === 0 ? ship it : handle it</span>
+  </div>
+</div>
+
+<div class="section" id="pricing">
+  <div class="section-label">Pricing</div>
+  <h2>Start free. Upgrade when you need to.</h2>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-tier">Free</div>
+      <div class="price-amount">$0</div>
+      <div class="price-period">no card required</div>
+      <ul class="price-features">
+        <li>500 requests/month</li>
+        <li>All 4 suppressors</li>
+        <li>Full API access</li>
+      </ul>
+      <button class="btn btn-outline" onclick="getFreeKey()" style="width:100%;justify-content:center">Get free key →</button>
+    </div>
+    <div class="price-card pro">
+      <div class="price-tier">Pro</div>
+      <div class="price-amount">$25</div>
+      <div class="price-period">per month</div>
+      <ul class="price-features">
+        <li>100,000 requests/month</li>
+        <li>All 4 suppressors</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="https://buy.stripe.com/test_3cI7sF031blZfEL8Dc67S00" class="btn btn-yellow" style="width:100%;justify-content:center;text-decoration:none">Subscribe →</a>
+    </div>
+    <div class="price-card">
+      <div class="price-tier">Enterprise</div>
+      <div class="price-amount">Custom</div>
+      <div class="price-period">contact us</div>
+      <ul class="price-features">
+        <li>Unlimited requests</li>
+        <li>Private deployment</li>
+        <li>SLA guarantee</li>
+      </ul>
+      <a href="/cdn-cgi/l/email-protection#f58681908390db8682949c9bc2c3b59a8081999a9a9edb969a98" class="btn btn-outline" style="width:100%;justify-content:center;text-decoration:none">Get in touch →</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>mcp-hallucination-suite</span>
+  <div class="links">
+    <a href="https://github.com/steveswain14/mcp-hallucination-suite" target="_blank">GitHub</a>
+    <a href="https://mcp-hallucination-suite-production.up.railway.app/docs" target="_blank">API Docs</a>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+async function getFreeKey() {
+  const box = document.getElementById('keyBox');
+  const val = document.getElementById('keyVal');
+  const btns = document.querySelectorAll('button.btn-yellow');
+  btns.forEach(b => b.textContent = 'Generating...');
+  try {
+    const res = await fetch('https://mcp-hallucination-suite-production.up.railway.app/register/free');
+    const data = await res.json();
+    val.textContent = data.api_key;
+    box.classList.add('show');
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    btns.forE
