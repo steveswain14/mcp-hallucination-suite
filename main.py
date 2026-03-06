@@ -11,7 +11,7 @@ import psycopg2.pool
 import stripe
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 
 from suppressor_suite import meta_suppressor
@@ -125,6 +125,11 @@ class ValidateRequest(BaseModel):
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
+
+@app.get("/")
+def index():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "index.html"))
+
 
 @app.get("/health")
 def health():
