@@ -13,11 +13,18 @@ import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from mcp.server.fastmcp import FastMCP, Context
+from mcp.server.fastmcp.server import TransportSecuritySettings
 from pydantic import BaseModel
 
 from suppressor_suite import meta_suppressor
 
-mcp_server = FastMCP("mcp-hallucination-suite", streamable_http_path="/")
+mcp_server = FastMCP(
+    "mcp-hallucination-suite",
+    streamable_http_path="/",
+    transport_security=TransportSecuritySettings(
+        allowed_hosts=["mcp-hallucination-suite-production.up.railway.app", "localhost"],
+    ),
+)
 _mcp_app = mcp_server.streamable_http_app()  # initialises session manager
 
 
