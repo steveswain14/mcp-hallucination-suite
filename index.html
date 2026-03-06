@@ -86,6 +86,45 @@
     .nav-right a:not(.nav-btn) { display: none; }
   }
 </style>
+<script>
+async function getFreeKey() {
+  const emailInput = document.getElementById('emailInput');
+  const btn = document.getElementById('submitBtn');
+  const box = document.getElementById('keyBox');
+  const msg = document.getElementById('keyMsg');
+  const email = emailInput.value.trim();
+  if (!email) { emailInput.focus(); return; }
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  box.classList.remove('show', 'error');
+  try {
+    const res = await fetch('/register/free', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      msg.textContent = 'Check your email for your API key.';
+      box.classList.add('show');
+      btn.textContent = 'Sent ✓';
+    } else {
+      msg.textContent = res.status === 409
+        ? 'An API key for this email already exists.'
+        : (data.detail || 'Something went wrong. Please try again.');
+      box.classList.add('show', 'error');
+      btn.textContent = 'Get free API key →';
+      btn.disabled = false;
+    }
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (e) {
+    msg.textContent = 'Something went wrong. Please try again.';
+    box.classList.add('show', 'error');
+    btn.textContent = 'Get free API key →';
+    btn.disabled = false;
+  }
+}
+</script>
 </head>
 <body>
 
