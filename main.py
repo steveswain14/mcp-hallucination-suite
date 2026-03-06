@@ -1,3 +1,4 @@
+import functools
 import os
 import secrets
 import smtplib
@@ -5,6 +6,7 @@ from contextlib import asynccontextmanager, contextmanager
 from email.mime.text import MIMEText
 from typing import Any
 
+import mcp.server.streamable_http as _streamable_http
 import psycopg2
 import psycopg2.extras
 import psycopg2.pool
@@ -15,6 +17,11 @@ from fastapi.responses import FileResponse, HTMLResponse
 from mcp.server.fastmcp import FastMCP, Context
 from mcp.server.fastmcp.server import TransportSecuritySettings
 from pydantic import BaseModel
+from sse_starlette import EventSourceResponse as _EventSourceResponse
+
+# Patch sse_starlette's EventSourceResponse to send keepalive pings every 15 s.
+# This prevents Railway (and similar proxies) from dropping idle SSE connections.
+_streamable_http.EventSourceResponse = functools.partial(_EventSourceResponse, ping=15)
 
 from suppressor_suite import meta_suppressor
 
