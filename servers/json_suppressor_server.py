@@ -2,9 +2,6 @@
 json_suppressor MCP server — thin FastMCP wrapper around suppressor_suite.json_suppressor.
 """
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mcp.server.fastmcp import FastMCP
 from suppressor_suite.json_suppressor import validate as _validate
