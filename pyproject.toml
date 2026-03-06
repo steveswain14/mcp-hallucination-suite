@@ -17,3 +17,6 @@ prompt-suppressor   = "servers.prompt_suppressor_server:mcp.run"
 tool-suppressor     = "servers.tool_response_suppressor_server:mcp.run"
 grounding-enforcer  = "servers.grounding_enforcer_server:mcp.run"
 meta-suppressor     = "servers.meta_suppressor_server:mcp.run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["suppressor_suite", "servers"]
