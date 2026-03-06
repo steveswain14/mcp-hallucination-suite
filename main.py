@@ -9,6 +9,7 @@ import psycopg2.extras
 import stripe
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from suppressor_suite import meta_suppressor
@@ -40,6 +41,12 @@ def init_db():
                     request_count INTEGER NOT NULL DEFAULT 0,
                     request_limit INTEGER NOT NULL DEFAULT 500,
                     created_at    TIMESTAMP NOT NULL DEFAULT NOW()
+                )
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS pending_keys (
+                    session_id TEXT PRIMARY KEY,
+                    api_key    TEXT NOT NULL
                 )
             """)
             # Add request_limit column to existing tables that predate this migration
@@ -135,6 +142,33 @@ def register_free():
     return {"api_key": key, "tier": "free", "request_limit": 500}
 
 
+@app.get("/activate/{session_id}", response_class=HTMLResponse)
+def activate(session_id: str):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT api_key FROM pending_keys WHERE session_id = %s", (session_id,))
+            row = cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Session not found")
+    api_key = row[0]
+    html = f"""<!DOCTYPE html>
+<html>
+<head><title>Your API Key</title></head>
+<body style="font-family:sans-serif;max-width:600px;margin:60px auto;padding:0 20px">
+  <h1>Your Pro API Key</h1>
+  <p>Here is your API key. Keep it safe — it grants access to your Pro account.</p>
+  <div style="background:#f4f4f4;border:1px solid #ccc;border-radius:6px;padding:16px 24px;font-size:1.3em;font-family:monospace;word-break:break-all">
+    {api_key}
+  </div>
+  <h2>How to use it</h2>
+  <p>Include it in the <code>X-API-Key</code> header with every request:</p>
+  <pre style="background:#f4f4f4;border:1px solid #ccc;border-radius:6px;padding:16px">X-API-Key: {api_key}</pre>
+  <p>Full documentation: <a href="{DOCS_URL}">{DOCS_URL}</a></p>
+</body>
+</html>"""
+    return HTMLResponse(content=html)
+
+
 @app.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
     payload = await request.body()
@@ -148,15 +182,18 @@ async def stripe_webhook(request: Request):
         session = event["data"]["object"]
         email = session.get("customer_details", {}).get("email") or session.get("customer_email", "")
         key = secrets.token_urlsafe(32)
+        session_id = session.get("id", "")
         with get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     "INSERT INTO api_keys (key, email, tier, request_limit) VALUES (%s, %s, %s, %s)",
                     (key, email, "pro", 100000),
                 )
+                cur.execute(
+                    "INSERT INTO pending_keys (session_id, api_key) VALUES (%s, %s)",
+                    (session_id, key),
+                )
             conn.commit()
-        if email:
-            send_api_key_email(email, key)
 
     return {"status": "ok"}
 
