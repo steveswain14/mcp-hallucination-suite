@@ -2,10 +2,6 @@
 grounding_enforcer MCP server — thin FastMCP wrapper around suppressor_suite.grounding_enforcer.
 """
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from typing import Any
 from mcp.server.fastmcp import FastMCP
 from suppressor_suite.grounding_enforcer import suppress as _suppress
