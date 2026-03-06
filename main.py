@@ -1,11 +1,13 @@
 import os
 import secrets
 import smtplib
+from contextlib import contextmanager
 from email.mime.text import MIMEText
 from typing import Any
 
 import psycopg2
 import psycopg2.extras
+import psycopg2.pool
 import stripe
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Request
@@ -26,8 +28,16 @@ DOCS_URL = "https://mcp-hallucination-suite-production.up.railway.app/docs"
 
 # ── Database helpers ──────────────────────────────────────────────────────────
 
+_pool: psycopg2.pool.SimpleConnectionPool | None = None
+
+
+@contextmanager
 def get_conn():
-    return psycopg2.connect(DATABASE_URL)
+    conn = _pool.getconn()
+    try:
+        yield conn
+    finally:
+        _pool.putconn(conn)
 
 
 def init_db():
@@ -59,6 +69,8 @@ def init_db():
 
 @app.on_event("startup")
 def startup():
+    global _pool
+    _pool = psycopg2.pool.SimpleConnectionPool(1, 5, DATABASE_URL)
     init_db()
 
 
