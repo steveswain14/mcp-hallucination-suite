@@ -12,11 +12,13 @@ import stripe
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
+from mcp.server.fastmcp import FastMCP, Context
 from pydantic import BaseModel
 
 from suppressor_suite import meta_suppressor
 
 app = FastAPI()
+mcp_server = FastMCP("mcp-hallucination-suite")
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
@@ -213,6 +215,35 @@ async def stripe_webhook(request: Request):
             conn.commit()
 
     return {"status": "ok"}
+
+
+# ── MCP server ────────────────────────────────────────────────────────────────
+
+@mcp_server.tool(name="validate")
+async def mcp_validate(
+    agent_turn: dict[str, Any],
+    run: list[str] | None,
+    ctx: Context,
+) -> dict[str, Any]:
+    """Validate agent output for hallucinations and policy violations."""
+    x_api_key = ctx.request_context.request.headers.get("x-api-key")
+    if not x_api_key:
+        raise ValueError("Missing API key")
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT * FROM api_keys WHERE key = %s", (x_api_key,))
+            row = cur.fetchone()
+    if not row:
+        raise ValueError("Invalid API key")
+    row = dict(row)
+    if row["request_count"] >= row["request_limit"]:
+        raise ValueError("Request limit reached. Upgrade to Pro.")
+    result = meta_suppressor.suppress(agent_turn=agent_turn, run=run)
+    increment_request_count(row["key"])
+    return result
+
+
+app.mount("/mcp", mcp_server.streamable_http_app())
 
 
 if __name__ == "__main__":
