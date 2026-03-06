@@ -1,7 +1,7 @@
 import os
 import secrets
 import smtplib
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from email.mime.text import MIMEText
 from typing import Any
 
@@ -17,8 +17,20 @@ from pydantic import BaseModel
 
 from suppressor_suite import meta_suppressor
 
-app = FastAPI()
 mcp_server = FastMCP("mcp-hallucination-suite", streamable_http_path="/")
+_mcp_app = mcp_server.streamable_http_app()  # initialises session manager
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global _pool
+    _pool = psycopg2.pool.SimpleConnectionPool(1, 5, DATABASE_URL)
+    init_db()
+    async with mcp_server.session_manager.run():
+        yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
@@ -68,12 +80,6 @@ def init_db():
             """)
         conn.commit()
 
-
-@app.on_event("startup")
-def startup():
-    global _pool
-    _pool = psycopg2.pool.SimpleConnectionPool(1, 5, DATABASE_URL)
-    init_db()
 
 
 # ── Email helper ──────────────────────────────────────────────────────────────
@@ -243,7 +249,7 @@ async def mcp_validate(
     return result
 
 
-app.mount("/mcp", mcp_server.streamable_http_app())
+app.mount("/mcp", _mcp_app)
 
 
 if __name__ == "__main__":
