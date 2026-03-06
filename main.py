@@ -1,10 +1,10 @@
 import functools
 import os
 import secrets
-import smtplib
 from contextlib import asynccontextmanager, contextmanager
-from email.mime.text import MIMEText
 from typing import Any
+
+import requests
 
 import mcp.server.streamable_http as _streamable_http
 import psycopg2
@@ -48,8 +48,8 @@ app = FastAPI(lifespan=lifespan)
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-GMAIL_ADDRESS = os.environ.get("GMAIL_ADDRESS", "")
-GMAIL_PASSWORD = os.environ.get("GMAIL_PASSWORD", "")
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+FROM_EMAIL = "onboarding@resend.dev"
 
 DOCS_URL = "https://mcp-hallucination-suite-production.up.railway.app/docs"
 
@@ -98,21 +98,21 @@ def init_db():
 
 # ── Email helper ──────────────────────────────────────────────────────────────
 
-def send_api_key_email(to_email: str, api_key: str):
+def send_api_key_email(to_email: str, api_key: str, tier: str = "free"):
+    subject = "Your mcp-hallucination-suite API key"
     body = (
-        f"Thank you for subscribing to mcp-hallucination-suite Pro!\n\n"
+        f"Thank you for {'subscribing to mcp-hallucination-suite Pro' if tier == 'pro' else 'registering with mcp-hallucination-suite'}!\n\n"
         f"Your API key is:\n\n    {api_key}\n\n"
         f"Pass it in the X-API-Key header with every request.\n\n"
         f"Full API documentation: {DOCS_URL}\n"
     )
-    msg = MIMEText(body)
-    msg["Subject"] = "Your mcp-hallucination-suite API key"
-    msg["From"] = GMAIL_ADDRESS
-    msg["To"] = to_email
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(GMAIL_ADDRESS, GMAIL_PASSWORD)
-        smtp.sendmail(GMAIL_ADDRESS, to_email, msg.as_string())
+    resp = requests.post(
+        "https://api.resend.com/emails",
+        headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+        json={"from": FROM_EMAIL, "to": [to_email], "subject": subject, "text": body},
+        timeout=10,
+    )
+    resp.raise_for_status()
 
 
 # ── API key validation ────────────────────────────────────────────────────────
@@ -139,11 +139,15 @@ def increment_request_count(key: str):
         conn.commit()
 
 
-# ── Request model ─────────────────────────────────────────────────────────────
+# ── Request models ────────────────────────────────────────────────────────────
 
 class ValidateRequest(BaseModel):
     agent_turn: dict[str, Any]
     run: list[str] | None = None
+
+
+class RegisterFreeRequest(BaseModel):
+    email: str
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -168,17 +172,26 @@ def validate(body: ValidateRequest, x_api_key: str | None = Header(default=None)
     return result
 
 
-@app.get("/register/free")
-def register_free():
-    key = secrets.token_urlsafe(32)
+@app.post("/register/free")
+def register_free(body: RegisterFreeRequest):
+    email = body.email.strip().lower()
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
+                "SELECT key FROM api_keys WHERE email = %s AND tier = 'free'", (email,)
+            )
+            existing = cur.fetchone()
+        if existing:
+            raise HTTPException(status_code=409, detail="An API key for this email already exists.")
+        key = secrets.token_urlsafe(32)
+        with conn.cursor() as cur:
+            cur.execute(
                 "INSERT INTO api_keys (key, email, tier, request_limit) VALUES (%s, %s, %s, %s)",
-                (key, "", "free", 500),
+                (key, email, "free", 500),
             )
         conn.commit()
-    return {"api_key": key, "tier": "free", "request_limit": 500}
+    send_api_key_email(email, key, tier="free")
+    return {"tier": "free", "request_limit": 500}
 
 
 @app.get("/activate/{session_id}", response_class=HTMLResponse)
