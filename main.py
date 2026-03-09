@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
         yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None)
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
@@ -160,6 +160,11 @@ def index():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/docs", include_in_schema=False)
+def docs():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "docs.html"))
 
 
 @app.post("/validate")
