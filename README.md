@@ -23,7 +23,7 @@ pip install mcp-hallucination-suite
 
 Or install from source:
 ```bash
-git clone https://github.com/yourusername/mcp-hallucination-suite
+git clone https://github.com/steveswain14/mcp-hallucination-suite
 cd mcp-hallucination-suite
 pip install -e .
 ```
@@ -60,19 +60,22 @@ Or use the meta suppressor to run all four in one call:
 
 ## Hosted API
 
-A hosted version is available at:
-
-`https://mcp-hallucination-suite.fastmcp.app/mcp`
-
-Add it directly to your MCP client config - no installation required:
-```json
-{
+A hosted version is available at certifai.dev - no installation required.
+Get a free API key at https://certifai.dev, then add it to your MCP client config:
+json{
   "mcpServers": {
-    "hallucination-suite": {
-      "url": "https://mcp-hallucination-suite.fastmcp.app/mcp"
+    "certifai": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://certifai.dev/mcp/",
+        "--header",
+        "X-API-Key: your-api-key"
+      ]
     }
   }
 }
+Full API documentation: https://certifai.dev/docs
 ```
 
 ## The meta suppressor
