@@ -2,7 +2,6 @@
 ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 ![Release](https://img.shields.io/github/v/release/steveswain14/mcp-hallucination-suite)
 
-
 # mcp-hallucination-suite
 
 A structural anti-hallucination middleware suite for AI agent pipelines.
@@ -15,6 +14,29 @@ Most hallucination tools check whether content is true. This suite checks whethe
 - **Prompt Suppressor** - enforces clean prompt structure, strips model-invented instructions, and detects capability hallucinations.
 - **Tool Response Suppressor** - verifies that what an agent claims a tool returned matches what the tool actually returned.
 - **Grounding Enforcer** - cross-checks model output against retrieved sources, flagging any claim that cannot be traced back to a real source.
+
+## Hosted API
+
+A hosted version is available at [certifai.dev](https://certifai.dev) - no installation required.
+
+Get a free API key at [certifai.dev](https://certifai.dev), then add it to your MCP client config:
+```json
+{
+  "mcpServers": {
+    "certifai": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://certifai.dev/mcp/",
+        "--header",
+        "X-API-Key: your-api-key"
+      ]
+    }
+  }
+}
+```
+
+Full API documentation: [certifai.dev/docs](https://certifai.dev/docs)
 
 ## Installation
 ```bash
@@ -30,7 +52,7 @@ pip install -e .
 
 ## Quick start
 
-Add individual suppressors to your MCP client configuration (Claude Desktop, Cursor, Windsurf, or any MCP‑compatible environment).
+Add individual suppressors to your MCP client configuration (Claude Desktop, Cursor, Windsurf, or any MCP-compatible environment).
 ```json
 {
   "mcpServers": {
@@ -56,26 +78,6 @@ Or use the meta suppressor to run all four in one call:
     }
   }
 }
-```
-
-## Hosted API
-
-A hosted version is available at certifai.dev - no installation required.
-Get a free API key at https://certifai.dev, then add it to your MCP client config:
-json{
-  "mcpServers": {
-    "certifai": {
-      "command": "npx",
-      "args": [
-        "mcp-remote",
-        "https://certifai.dev/mcp/",
-        "--header",
-        "X-API-Key: your-api-key"
-      ]
-    }
-  }
-}
-Full API documentation: https://certifai.dev/docs
 ```
 
 ## The meta suppressor
@@ -111,12 +113,13 @@ Every suppressor is available as plain Python with no MCP dependency:
 from suppressor_suite.json_suppressor import validate
 from suppressor_suite.grounding_enforcer import suppress
 ```
+
 ## Related repositories
+
 - mcp-prompt-suppressor
 - mcp-json-suppressor
 - mcp-tool-response-suppressor
 - mcp-grounding-enforcer
-
 
 ## Contributing
 
