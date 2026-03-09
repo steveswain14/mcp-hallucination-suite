@@ -51,7 +51,7 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL = "noreply@certifai.dev"
 
-DOCS_URL = "https://mcp-hallucination-suite-production.up.railway.app/docs"
+DOCS_URL = "https://certifai.dev/docs"
 
 
 # ── Database helpers ──────────────────────────────────────────────────────────
