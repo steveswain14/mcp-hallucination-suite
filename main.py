@@ -26,10 +26,10 @@ _streamable_http.EventSourceResponse = functools.partial(_EventSourceResponse, p
 from suppressor_suite import meta_suppressor
 
 mcp_server = FastMCP(
-    "mcp-hallucination-suite",
+    "certifai",
     streamable_http_path="/",
     transport_security=TransportSecuritySettings(
-        allowed_hosts=["mcp-hallucination-suite-production.up.railway.app", "localhost"],
+        allowed_hosts=["mcp-hallucination-suite-production.up.railway.app", "certifai.dev", "localhost"],
     ),
 )
 _mcp_app = mcp_server.streamable_http_app()  # initialises session manager
@@ -49,7 +49,7 @@ app = FastAPI(lifespan=lifespan)
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
-FROM_EMAIL = "onboarding@resend.dev"
+FROM_EMAIL = "noreply@certifai.dev"
 
 DOCS_URL = "https://mcp-hallucination-suite-production.up.railway.app/docs"
 
@@ -99,9 +99,9 @@ def init_db():
 # ── Email helper ──────────────────────────────────────────────────────────────
 
 def send_api_key_email(to_email: str, api_key: str, tier: str = "free"):
-    subject = "Your mcp-hallucination-suite API key"
+    subject = "Your Certifai API key"
     body = (
-        f"Thank you for {'subscribing to mcp-hallucination-suite Pro' if tier == 'pro' else 'registering with mcp-hallucination-suite'}!\n\n"
+        f"Thank you for {'subscribing to Certifai Pro' if tier == 'pro' else 'registering with Certifai'}!\n\n"
         f"Your API key is:\n\n    {api_key}\n\n"
         f"Pass it in the X-API-Key header with every request.\n\n"
         f"Full API documentation: {DOCS_URL}\n"
