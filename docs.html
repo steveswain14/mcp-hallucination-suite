@@ -328,16 +328,44 @@
 
     <section id="tool">
       <h2>tool_response_suppressor</h2>
-      <p>Compares what a tool claimed to return against what it actually returned. Flags unexpected fields, missing fields, and schema drift.</p>
+      <p>Compares what the assistant reported a tool returned against what the tool actually returned. Flags schema drift, missing fields, unexpected fields, mismatches between reported and actual output, and hallucinations in assistant commentary.</p>
 
       <h3>Input fields</h3>
       <table>
         <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td>declared_output</td><td>object</td><td>What the tool said it would return</td></tr>
-          <tr><td>actual_output</td><td>object</td><td>What the tool actually returned</td></tr>
+          <tr><td>tool_responses</td><td>array</td><td>List of tool response objects, each with <code>tool_name</code>, <code>reported_output</code>, and <code>actual_output</code></td></tr>
+          <tr><td>schema</td><td>object</td><td>Expected schema to validate responses against</td></tr>
+          <tr><td>mode</td><td>string</td><td>One of <code>"A"</code>, <code>"B"</code>, <code>"C"</code>, or <code>"all"</code> (default)</td></tr>
+          <tr><td>assistant_commentary</td><td>string</td><td>Optional — the assistant's description of what the tool returned</td></tr>
         </tbody>
       </table>
+
+      <h3>Example</h3>
+      <div class="code-block">
+<span class="cs">"agent_turn"</span>: {<br>
+&nbsp;&nbsp;<span class="cs">"tool_response"</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"tool_responses"</span>: [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"tool_name"</span>: <span class="cs">"get_weather"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"reported_output"</span>: {<span class="cs">"status"</span>: <span class="cs">"ok"</span>, <span class="cs">"items"</span>: []},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"actual_output"</span>: {<span class="cs">"status"</span>: <span class="cs">"ok"</span>, <span class="cs">"items"</span>: <span class="cs">"not-a-list"</span>}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"schema"</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"type"</span>: <span class="cs">"object"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"properties"</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"status"</span>: {<span class="cs">"type"</span>: <span class="cs">"string"</span>},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"items"</span>: {<span class="cs">"type"</span>: <span class="cs">"array"</span>}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"required"</span>: [<span class="cs">"status"</span>, <span class="cs">"items"</span>]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"mode"</span>: <span class="cs">"all"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"assistant_commentary"</span>: <span class="cs">""</span><br>
+&nbsp;&nbsp;}<br>
+},<br>
+<span class="cs">"run"</span>: [<span class="cs">"tool_response"</span>]
+      </div>
     </section>
 
     <section id="validate">
