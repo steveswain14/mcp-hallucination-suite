@@ -181,6 +181,7 @@
       <p>Go to <a href="/" style="color:var(--accent)">certifai.dev</a> and enter your email to get a free API key. It'll arrive in your inbox immediately.</p>
 
       <h3>2. Make your first request</h3>
+      <p>Pass your agent's output along with the sources it was given. The grounding enforcer checks whether the model's claims are supported by those sources – not against the internet.</p>
       <div class="code-block">
         <button class="copy-btn" onclick="copyCode(this)">copy</button>
 <span class="ckw">curl</span> <span class="cs">https://certifai.dev/validate</span> \<br>
@@ -189,8 +190,8 @@
 &nbsp;&nbsp;<span class="ck">-d</span> <span class="cs">'{</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"agent_turn": {</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"grounding": {</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"model_output": "According to McKinsey, 67% of AI projects fail.",</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"retrieved_sources": []</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"model_output": "The report says retention improved by 40%.",</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"retrieved_sources": ["Customer satisfaction scores rose slightly in Q3."]</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">}</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">},</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"run": ["grounding"]</span><br>
@@ -232,7 +233,7 @@
       <div class="suppressor-grid">
         <div class="suppressor-card">
           <div class="suppressor-name">grounding_enforcer</div>
-          <div class="suppressor-desc">Catches ungrounded claims, fabricated citations, and attributions that can't be matched to a retrieved source.</div>
+          <div class="suppressor-desc">Checks whether model output is supported by the sources you pass in. Flags claims that can't be traced back to retrieved content – not a fact-checker, but a grounding checker.</div>
         </div>
         <div class="suppressor-card">
           <div class="suppressor-name">prompt_suppressor</div>
@@ -251,7 +252,8 @@
 
     <section id="grounding">
       <h2>grounding_enforcer</h2>
-      <p>Checks whether model output is supported by the retrieved sources passed in. Flags ungrounded attributions, fabricated statistics, and claims that can't be matched to a real source.</p>
+      <p>Checks whether the model's output is supported by the retrieved sources you pass in with the request. It does not verify claims against the internet – it checks whether the model has gone beyond what it was actually given. Useful in RAG pipelines where you want to ensure the model only cites content it was provided.</p>
+      <p>For full factual verification, the grounding checker can be paired with external fact-checking systems such as Google's Gemini-based fact-checking agents.</p>
 
       <h3>Input fields</h3>
       <table>
