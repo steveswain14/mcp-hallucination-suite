@@ -136,7 +136,7 @@ def _check_quotes(model_output: str, retrieved_sources: list[dict]) -> list[dict
 
 def _check_urls(model_output: str, retrieved_sources: list[dict]) -> list[dict]:
     violations = []
-    source_urls = {s.get("url") for s in retrieved_sources if s.get("url")}
+    source_urls = {s.get("url") for s in retrieved_sources if isinstance(s, dict) and s.get("url")}
     for m in URL_PATTERN.finditer(model_output):
         url = m.group(0)
         if url not in source_urls:
