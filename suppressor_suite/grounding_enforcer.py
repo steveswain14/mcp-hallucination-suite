@@ -69,13 +69,23 @@ VIOLATION_LABELS = {
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _all_source_contents(retrieved_sources: list[dict]) -> list[str]:
-    return [s.get("content", "") for s in retrieved_sources if s.get("content")]
+def _all_source_contents(retrieved_sources: list) -> list[str]:
+    contents = []
+    for s in retrieved_sources:
+        if isinstance(s, dict):
+            content = s.get("content", "")
+            if content:
+                contents.append(content)
+        elif isinstance(s, str) and s:
+            contents.append(s)
+    return contents
 
 
 def _source_ids_containing(text: str, retrieved_sources: list[dict]) -> list[str]:
     matched = []
     for src in retrieved_sources:
+        if not isinstance(src, dict):
+            continue
         content = src.get("content", "")
         if text in content:
             matched.append(src.get("id", ""))
@@ -105,12 +115,19 @@ def _terms_present_in_content(terms: list[str], content: str) -> int:
     return sum(1 for t in terms if t in content_lower)
 
 
-def _source_ids_with_enough_terms(terms: list[str], retrieved_sources: list[dict]) -> list[str]:
+def _source_ids_with_enough_terms(terms: list[str], retrieved_sources: list) -> list[str]:
     matched = []
-    for src in retrieved_sources:
-        content = src.get("content", "")
+    for i, src in enumerate(retrieved_sources):
+        if isinstance(src, dict):
+            content = src.get("content", "")
+            source_id = src.get("id", "")
+        elif isinstance(src, str):
+            content = src
+            source_id = str(i)
+        else:
+            continue
         if _terms_present_in_content(terms, content) >= 3:
-            matched.append(src.get("id", ""))
+            matched.append(source_id)
     return matched
 
 
@@ -168,6 +185,8 @@ def _check_statistics(model_output: str, retrieved_sources: list[dict]) -> list[
         found_in_any = False
         source_ids = []
         for src in retrieved_sources:
+            if not isinstance(src, dict):
+                continue
             content = src.get("content", "")
             if number in content and unit in content.lower():
                 if any(t in content.lower() for t in nearby_terms):
@@ -206,9 +225,11 @@ def _check_claims(model_output: str, retrieved_sources: list[dict]) -> list[dict
 
 def _check_attributions(model_output: str, retrieved_sources: list[dict]) -> list[dict]:
     violations = []
-    all_titles = [s.get("title", "") or "" for s in retrieved_sources]
+    all_titles = [s.get("title", "") or "" for s in retrieved_sources if isinstance(s, dict)]
     all_meta_values: list[str] = []
     for s in retrieved_sources:
+        if not isinstance(s, dict):
+            continue
         meta = s.get("metadata", {}) or {}
         all_meta_values.extend(str(v) for v in meta.values())
 
@@ -231,7 +252,7 @@ def _check_attributions(model_output: str, retrieved_sources: list[dict]) -> lis
 
 def _check_retrieval_claims(model_output: str, retrieved_sources: list[dict]) -> list[dict]:
     violations = []
-    source_urls = [s.get("url", "") or "" for s in retrieved_sources]
+    source_urls = [s.get("url", "") or "" for s in retrieved_sources if isinstance(s, dict)]
 
     has_any_url = any(source_urls)
     for pat in RETRIEVAL_PATTERNS:
