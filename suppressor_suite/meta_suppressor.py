@@ -45,7 +45,7 @@ def suppress(
     run_all = "all" in run
     run_prompt = run_all or "prompt" in run
     run_json = run_all or "json" in run
-    run_tool = run_all or "tool_response" in run
+    run_tool = run_all or "tool_response" in run or "tool" in run
     run_grounding = run_all or "grounding" in run
 
     results: dict[str, Any] = {}
@@ -55,8 +55,13 @@ def suppress(
     # ── Prompt suppressor ───────────────────────────────────────────────────
     if run_prompt and "prompt" in agent_turn:
         p = agent_turn["prompt"]
+        # Support {content, source} shorthand as well as the full {conversation} format
+        if "content" in p and "conversation" not in p:
+            conversation = [{"role": "user", "content": p["content"]}]
+        else:
+            conversation = p.get("conversation", [])
         result = prompt_suppressor.suppress(
-            conversation=p.get("conversation", []),
+            conversation=conversation,
             canonical_system_prompt=p.get("canonical_system_prompt", ""),
             mode=p.get("mode", "all"),
         )
@@ -66,8 +71,8 @@ def suppress(
         summary_parts.append(f"prompt: {count} violation(s)")
 
     # ── JSON suppressor ─────────────────────────────────────────────────────
-    if run_json and "json_data" in agent_turn:
-        j = agent_turn["json_data"]
+    if run_json and ("json_data" in agent_turn or "json" in agent_turn):
+        j = agent_turn.get("json_data") or agent_turn.get("json")
         result = json_suppressor.validate(
             input=j.get("input", ""),
             mode=j.get("mode", "strict"),
@@ -78,8 +83,8 @@ def suppress(
         summary_parts.append(f"json: {count} violation(s)")
 
     # ── Tool response suppressor ────────────────────────────────────────────
-    if run_tool and "tool_response" in agent_turn:
-        t = agent_turn["tool_response"]
+    if run_tool and ("tool_response" in agent_turn or "tool" in agent_turn):
+        t = agent_turn.get("tool_response") or agent_turn.get("tool")
         result = tool_response_suppressor.suppress(
             tool_responses=t.get("tool_responses", []),
             schema=t.get("schema", {}),
